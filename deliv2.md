@@ -1,64 +1,66 @@
 # Kloud Kart: Data Strategy Recommendation
 
-Kloud Kart should first move reporting off the live shop and agree one definition of its key figures. It should then build a modest managed data warehouse fed from a MySQL read replica, updated once a day. Stock decisions stay in the live database. This gives Nana and Finance one trusted set of figures, stops reporting slowing the website, and gives the company a controlled place to account for customer data. It fits about 40 GB of structured data, about 4,000 orders a day and one developer.
+Kloud Kart should do three things, in this order. First, give reports their own copy of the database, so they stop slowing the shop. Second, agree one written meaning for revenue, completed orders and cancellations. Third, build one shared place for reports that updates once a day. Stock stays in the live shop system. Kloud Kart has about 40 GB of data, about 4,000 orders a day, one developer and money for two data hires, and the plan is sized to that.
 
 ## 1. Architecture and Tools
 
-Use four parts and no more. Each extra part is another failure point for two hires to support.
+Use four parts and no more. Every extra part is something two new hires must keep running.
 
-- **MySQL read replica** on the approved second server. Large reporting queries run here, not on the live database. It is not running yet, so nothing is fixed until its speed and delay behind the live data are tested.
-- **Scheduled extract with a failure alert.** Extraction is what took the website down twice. It runs outside busy periods, reads from the replica, and copies only changed rows.
-- **Modest managed warehouse**, where the agreed calculations are written in SQL.
-- **One business intelligence tool** for shared reports.
+- **A separate copy of the live database for reports (a read replica).** The website and database share one server, and a Monday export of a few hundred thousand rows competes with customers for it. That is the likely reason the shop slowed twice last month. The second server is approved but not running, so nothing is fixed until the copy is tested for speed and for how far behind it falls.
+- **An automatic daily job** that copies only new and changed records from the copy, never from the live database, and alerts someone if it fails.
+- **One shared place for reports (a data warehouse)**, holding the agreed calculations.
+- **One reporting tool** that Nana and Finance both open.
 
-**Why a warehouse, not size.** Forty GB is small, so size does not justify it. The reason is control: one place for agreed definitions and one designed place where customer data can be found and deleted. For structured data, known reporting questions and two hires, a modest warehouse is proportionate. A lake or lakehouse is rejected because Kloud Kart has no varied data or machine-learning need. Definitions are not yet agreed, so the warehouse is built only after they are.
+**Why a shared place, if 40 GB is small?** Size is not the reason. Even at 15 to 20% growth a year, this stays small. The reason is control. Today two teams calculate the same figure two ways, and customer data sits in untracked files. A shared place gives the calculations one home, and customer data one designed place where it can be found and deleted. It is built only after Nana and Finance agree what their figures mean.
 
-**Privacy.** Mask or remove personal information that reporting does not need before it enters the warehouse, then calculate in SQL. The warehouse is another copy of customer data, so a deletion request must reach it, and "keep everything raw forever" is not acceptable. Retention periods need management and legal advice. No Python is planned unless SQL cannot do a task.
+**Larger systems are rejected.** A lake or lakehouse (systems for large amounts of varied raw data) would add work for data Kloud Kart does not have. Machine-learning forecasting stays on the wish list for later.
+
+**Customer data.** Personal details that reports do not need are removed or masked first. The shared place is another copy, so a deletion request must reach it. How long to keep data needs legal advice.
 
 ## 2. Processing Approach
 
-Use daily batch processing. The test is: what decision changes if this number is ten seconds old instead of twenty-four hours old? For revenue, customer and management reports, none does. Streaming runs constantly, is harder to debug and needs someone on call, so for two hires it is unstaffable.
+Reports update once a day. The test: what decision would change if a figure were seconds old instead of a day old? For revenue, customer and management reports, none would. Updating continuously runs all the time, is harder to fix and needs someone on call, which two hires who also keep a shop running cannot manage.
 
-**Stock is the one exception, and needs no streaming system.** The live MySQL database stays the source of truth, and placing an order checks and updates stock there. The warehouse never approves orders, because its figures can be a day old.
+Stock is the one exception, and it needs no new system. The live database stays the one record the shop trusts, and placing an order checks and updates stock there. Reports never approve orders, because a day-old stock count means selling items Kloud Kart no longer has.
 
-**Answer to investors asking for real-time analytics:** "Which decision, made by whom, is late today? Today it is the Monday figure, which Nana rebuilds by hand and which does not match Finance's. One agreed figure ready every morning fixes that. If you name a decision needing data fresher than a day, we will cost it and add it."
+**Answer to investors who ask for "real-time analytics":** "Which decision, made by whom, is late today? Today it is the Monday figure. Nana rebuilds it by hand and it does not match Finance's. One agreed figure ready every morning fixes that. If you name a decision that needs fresher data, we will cost it and add it."
 
 ## 3. People and Responsibilities
 
-Agreeing the definitions of revenue, completed orders and cancellations is cheap, needs no hire and unblocks everything, so it happens first, in Q1, between Nana, Finance and a management sponsor (assumption: they are available). The warehouse is harder to reverse, so it follows.
+Agreeing the meaning of revenue, completed orders and cancellations is cheap, needs no hire and unlocks everything else, so it happens first, in Q1, between Nana, Finance and a senior sponsor (assumption: they are available).
 
-**First hire: Data Engineer**, because reporting is slowing the shop now. Replica work should start in Q1 even if hiring slips (assumption: the existing developer can begin it). In 90 days:
+**First hire: Data Engineer,** because reporting is hurting the shop now. Work on the copy starts in Q1 even if hiring is late (assumption: the existing developer can begin it). Within 90 days:
 
-- The Monday extract runs from the replica, with before-and-after site timings to show Nana and the board.
-- The replica's delay is measured and written down.
-- A failed update alerts a named person the same day.
+- The Monday report runs from the copy, with before-and-after site speed shown to Nana and the board.
+- How far behind the copy runs is measured and written down.
+- A failed daily update alerts a named person the same day.
 
-**Second hire: Analytics Engineer**, at the start of Q2 (assumption). In 90 days:
+**Second hire: Analytics Engineer,** from the start of Q2 (assumption). Within 90 days:
 
-- The agreed definitions are written into the warehouse.
-- One full month of Nana's and Finance's figures is reconciled, with every difference explained.
+- The agreed meanings are built into the shared place.
+- One full month of Nana's and Finance's figures is compared, and every difference explained.
 - The first shared Monday report is published, and Nana opens it herself.
 
-**Customer data.** Management names an accountable person now. The hires build and maintain the technical controls.
+**Customer data.** Management names one accountable person now. The hires build and maintain the technical controls.
 
 ## 4. Main Trade-offs and Alternatives
 
-**Strongest alternative: replica plus scheduled SQL reports, no warehouse.** Cheaper, fewer systems, fewer copies of customer data. I reject it because reporting logic would spread across scripts with no single governed home for definitions. I accept the cost of another system, another copy of customer data, a charge each time something runs, and a skill nobody here has used. If I am wrong, the company pays for a warehouse a replica report could have replaced. At the Q2 checkpoint, if replica reports already give Nana and Finance the same figure and nobody needs more, I would hold the warehouse.
+**Strongest alternative: the separate copy plus scheduled reports, with no shared place.** It is cheaper, has fewer parts and holds fewer copies of customer data. I reject it because calculations would spread across separate scripts with no single owner of the agreed meanings. I accept another system to run, another copy of customer data to delete from, a charge each time it runs, and a skill nobody here has used. If I am wrong, Kloud Kart pays for something a simple report could have done. I would hold the shared place at the end of Q2 if scheduled reports already give Nana and Finance the same figure and nobody needs more.
 
-**Operations-only data mart.** Rejected: Finance needs the same figures, and a mart for one department risks two versions of the truth. This is my reasoning from the case, not a course finding.
+**A reporting store for Operations only.** Rejected: Finance needs the same figures, so one department's store risks two versions again. This is my reasoning from the case.
 
-**Streaming for general reporting.** Rejected for the reasons above, and reconsidered only if a named decision needs fresher data and its cost is justified.
+**Continuous updating for all reports.** Rejected for the reasons in section 2, and reconsidered only if someone names a decision that needs fresher data and the cost is justified.
 
 ## 5. Cost and Immediate Priorities
 
-There are no quotes yet, so I give no total. Exact amounts must come from salary estimates and vendor quotations before a platform is chosen.
+No quotes exist yet, so I give no total and will not invent one. Figures must come from salary estimates and supplier quotes before anything is bought.
 
-- **One-off:** setting up the replica, warehouse and first reports.
-- **Recurring:** the second server, warehouse usage (charged each time something runs), the reporting tool, monitoring.
-- **Staffing:** two salaries, the largest ongoing cost.
+- **One-off:** setting up the copy, the shared place and the first reports.
+- **Running costs:** the second server, the shared place (charged each time it runs), the reporting tool and monitoring.
+- **People:** two salaries, likely the largest ongoing cost (my assumption).
 
-For comparison, Nana's manual rebuild is about five working weeks a year, on my placeholder of four hours a week (Deliverable 1). Start with a small warehouse allocation, avoid unnecessary refreshes, and review cost monthly.
+To control cost: start small, avoid unnecessary refreshes, and review cost every month.
 
-**The DPC complaint cannot wait for the hires.** As I understand Act 843, and not as legal advice, management must investigate, find every copy of the customer's data, assess what must be deleted and what may lawfully be kept (an assumption needing legal advice), document the actions, and respond within 90 days.
+**The Data Protection Commission (DPC) complaint cannot wait for the hires.** As I understand Act 843, and not as legal advice, management must investigate, find every copy of the customer's data, assess what must be deleted and what may lawfully be kept (an assumption needing legal advice), record what was done, and respond within 90 days.
 
-**Expected result:** One set of figures for Nana and Finance, reporting off the live shop, and customer data the company can account for, in a setup two hires can run.
+**Expected result:** One set of figures for Nana and Finance, reports that no longer slow the shop, and customer data the company can account for, run by a team of two.
