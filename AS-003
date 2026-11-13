@@ -1,0 +1,40 @@
+# ADR-003: Update reporting figures once a day, copying only new or changed records
+
+- **Status:** Accepted
+- **Date:** 2026-11-12
+- **Decision owner:** Kloud Kart leadership
+
+## Context
+
+Nana rebuilds Monday figures from large CSV files, and Finance gets different numbers from its spreadsheets. Most reports do not need up-to-the-second figures. The test is whether a decision would change if a figure were seconds old instead of a day old. For revenue, customer and management reports, it would not.
+
+Kloud Kart can hire only two data staff, so whatever is chosen must be something they can run. Reports will draw from the copy of the database (ADR-001), not from the live database.
+
+## Decision
+
+Update the reporting warehouse once a day. Each update copies only the records that are new or changed since the last one.
+
+## Alternatives considered
+
+### Alternative A: Copy everything from the reporting copy every night
+
+- **How it would work:** Every night, the full set of reporting data is copied over and replaces the warehouse data.
+- **Why it is attractive:** It is simple to understand and build. The team does not have to track what has changed, and a full reload gives a fresh copy each time.
+- **Why rejected:** The job gets heavier every night as the data grows, and it repeats work on records that have not changed. Copying only what changed keeps running costs and load under control.
+
+### Alternative B: Update the warehouse continuously as orders happen
+
+- **How it would work:** Changes are sent to the warehouse the moment they occur, so reports are close to real time.
+- **Why it is attractive:** Reports would show new orders almost immediately. It would appeal to investors who asked for real-time analytics, and it would help any decision that truly needs current figures.
+- **Why rejected:** No main report needs it today. A continuous system runs all the time, is harder to fix when it breaks and needs someone on call. A two-person team would have to support it for little benefit.
+
+## Consequences
+
+- **What this buys:** Nana and Finance get consistent daily reports without copying all the data each time. Warehouse costs stay manageable as the business grows.
+- **What this costs:** Reports will not show the latest sales until the next daily update. The team must build and watch the process that finds new and changed records, handle failed runs, and make sure no record is loaded twice or missed.
+- **What it costs the client if I am wrong:** If a decision depends on figures fresher than a day, management could act on incomplete numbers. Nana might present revenue that misses today's sales, or a developing problem could go unnoticed until the next update.
+- **What would make me revisit this:** Management names a specific decision that cannot wait a day, and who makes it. Or the daily update takes so long that reports are late.
+
+## What this survives
+
+Daily updates can handle more orders without reloading everything each night, and they give Kloud Kart a manageable start for Nigeria. If faster reporting is ever needed, the company can first try more frequent scheduled updates before any continuous system.

@@ -1,0 +1,40 @@
+# ADR-002: Make one named person responsible for knowing where customer data is kept
+
+- **Status:** Accepted
+- **Date:** 2026-11-12
+- **Decision owner:** Kloud Kart leadership
+
+## Context
+
+Kloud Kart keeps customer information in several places, including Marketing's list of about 300,000 people. It has no reliable record of where the copies are or who is responsible for them.
+
+A customer's deletion request has led to a Data Protection Commission complaint, and Kloud Kart has 90 days to respond. The new reporting copy and warehouse will add more places that hold customer information.
+
+## Decision
+
+Management names one accountable person and sets up a company-wide record of where customer information is kept, who owns each copy, and who can see it. The record also sets out how access, keeping and deletion requests are handled. Every known system and copy is covered.
+
+## Alternatives considered
+
+### Alternative A: Let each department manage its own customer information
+
+- **How it would work:** Marketing, Finance and Operations keep managing their own files and decide who can see them and how requests are handled.
+- **Why it is attractive:** Departments know their own work and do not have to wait for a central process. There is no immediate effort to build a company-wide record.
+- **Why rejected:** Kloud Kart already does not know where all the copies are. Separate arrangements make it harder to find every copy when a customer asks for deletion or a complaint arrives.
+
+### Alternative B: Keep customer information in one central system only
+
+- **How it would work:** All customer information moves into one database, and departments use it from there instead of keeping their own copies.
+- **Why it is attractive:** There would be fewer places to check, and access and deletion would be easier to manage.
+- **Why rejected:** Departments may still need information in their own tools. Moving everything would mean large changes to how people work, and it would not remove the copies that already exist. The existing copies must be found and controlled first.
+
+## Consequences
+
+- **What this buys:** A clear record of where customer information is held and who is responsible for it. Kloud Kart can investigate complaints and show what it did.
+- **What this costs:** Departments must help list their copies, keep the record accurate and follow common rules. Management must assign the role and check that the rules are followed. This takes time from other work.
+- **What it costs the client if I am wrong:** If the record is incomplete, Kloud Kart could miss a copy when it answers a deletion request. It could send an incomplete response to the Commission, face further action and lose customer trust. Nana could also spend her time hunting for data instead of running Operations.
+- **What would make me revisit this:** New systems, departments or countries create places that the record cannot track. Or deletion requests keep turning up copies nobody listed. Or access checks show departments cannot keep up.
+
+## What this survives
+
+The record can cover the live database, the reporting copy, the warehouse, Marketing's files and future systems. It does not depend on all customer information sitting in one place. As Kloud Kart grows, each new system or department must be added to the record, with a named owner, before it uses customer data.

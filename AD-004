@@ -1,0 +1,40 @@
+# ADR-004: Keep live stock counts and order decisions in the live database
+
+- **Status:** Accepted
+- **Date:** 2026-11-12
+- **Decision owner:** Kloud Kart leadership
+
+## Context
+
+Stock counts must not go stale. An out-of-date count could mean Kloud Kart accepts orders for items it no longer has.
+
+The reporting copy and the warehouse are updated after the shop records a sale, so they can be behind the live database. The shop must not depend on them.
+
+## Decision
+
+The live database stays the one record the shop trusts for stock. When an order is placed, the ordering system checks and updates stock there. The reporting copy and the warehouse never approve orders or decide what is in stock.
+
+## Alternatives considered
+
+### Alternative A: Let the website check stock on the reporting copy
+
+- **How it would work:** The website reads stock levels from the reporting copy, which takes some load off the live database.
+- **Why it is attractive:** It spreads the work across two servers. If the copy is usually up to date, its figures are often close to the latest counts.
+- **Why rejected:** The copy can be a little behind. In that gap, a customer could see an item as available when another order has already taken it. That creates a real risk of overselling.
+
+### Alternative B: Use the reporting warehouse as the source of stock figures
+
+- **How it would work:** Stock data is copied into the warehouse, and the website or another service uses those figures to check availability.
+- **Why it is attractive:** Stock, sales and customer data would sit together, which makes it easier to study stock movement and sales trends.
+- **Why rejected:** The warehouse is built for analysis, not for the exact stock position during a live purchase. It updates on a schedule, so its stock figures are too old to approve orders.
+
+## Consequences
+
+- **What this buys:** Every order is checked against current stock, not delayed figures from a copy.
+- **What this costs:** The live database keeps doing stock checks and updates, so some load stays on it. The ordering process must also handle two people buying the last item at the same moment.
+- **What it costs the client if I am wrong:** If the live stock process fails when orders arrive together, two customers could buy the same last item. Nana's team would face refunds, complaints and damage to the company's reputation. Keeping stock on the live database does not guarantee accuracy by itself, so the ordering process must be tested.
+- **What would make me revisit this:** The live database cannot cope with the stock load as orders grow. Or the Nigeria expansion creates stock needs it cannot handle safely. Any change must first prove that stock stays accurate when many people buy at once.
+
+## What this survives
+
+Reporting can grow without ever taking over order decisions. If order volume grows, Kloud Kart can improve the stock process on the live database separately, as long as it stays the trusted source of current stock.

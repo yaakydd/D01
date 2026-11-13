@@ -1,0 +1,40 @@
+# ADR-001: Use a copy of the live database for reporting (a read replica)
+
+- **Status:** Accepted
+- **Date:** 2026-11-12
+- **Decision owner:** Kloud Kart leadership
+
+## Context
+
+Kloud Kart keeps orders, stock and customer accounts in one database on the same server as the live website. Large Monday exports have slowed the website twice in one month, because the reports and the shop compete for the same server.
+
+A second server is already approved, but it is not yet running. Kloud Kart can hire only two data staff, so the solution must be simple enough for a small team.
+
+## Decision
+
+Set up the approved second server as a read replica: a copy of the live database that is kept up to date automatically and used only for reports. Monday exports and other reports read from the copy. The live database serves the shop and stock.
+
+## Alternatives considered
+
+### Alternative A: Keep reports on the live database and run exports at quiet hours
+
+- **How it would work:** Large exports run at the quietest hours, with limits on how much of the server they can use.
+- **Why it is attractive:** There is no new server, nothing new to learn and no extra copy of customer data. It could start quickly.
+- **Why rejected:** It makes another slowdown less likely, but reports and the shop still share one server. Orders are growing, so the problem could return.
+
+### Alternative B: Copy data straight from the live database into a managed reporting warehouse
+
+- **How it would work:** A scheduled job copies data from the live database into a managed reporting warehouse, which is a separate store built for reports.
+- **Why it is attractive:** Reporting gets its own home immediately, and there is no replica to run.
+- **Why rejected:** The warehouse is a sound later step, but it should wait until Nana and Finance agree what their figures mean, which they have not yet done. Building it first would mean loading data before anyone has agreed how revenue and other key figures are calculated.
+
+## Consequences
+
+- **What this buys:** Reports can no longer slow the shop. The reporting warehouse, when built, can load from the copy and not from the live database.
+- **What this costs:** Kloud Kart pays for and runs a second server. Someone must check that the copy keeps up with the live database. It is also one more copy of customer data, so it must be included whenever a customer's data is deleted.
+- **What it costs the client if I am wrong:** If the copy cannot cope or keeps falling behind, Nana's reports arrive late and she goes back to manual exports. If reports do not show when they were last updated, managers could act on figures that are out of date.
+- **What would make me revisit this:** The copy falls behind by more than the delay that Nana and the Data Engineer agree is acceptable, once it has been tested. Or it cannot handle report demand. Or running it proves too much for two people. Or the Nigeria pilot sharply raises report demand.
+
+## What this survives
+
+If orders grow and Nigeria is added, reporting grows on its own server without adding load to the shop. It does not guarantee the copy is always up to date, so it must be watched, and stock decisions stay on the live database (ADR-004).
